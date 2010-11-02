@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ================================= -->
+<!-- = Build script for Tasks plugin = -->
+<!-- ================================= -->
+<project name="Tasks" default="all">
+    <property name="dist.dir" value="dist/"/>
+    <property name="build.dir" value="build/"/>
+    <property name="plugin.jar" value="Tasks.jar"/>
+    <property name="sources.zip" value="Tasks_src.zip"/>
+    <property name="idea.sdk.dir" value="C:\IntelliJ IDEA 6.0"/>
+    <property name="java.src.dir" value="src/java"/>
+    <property name="plugin.xml.file" value="META-INF/plugin.xml"/>
+
+    <path id="project.classpath">
+        <fileset dir="${idea.sdk.dir}\lib">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <!-- === Compiles plugin and packages it's sources === -->
+    <target name="all" depends="jar, package.src"/>
+
+    <!-- === Packages plugin sources === -->
+    <target name="package.src">
+        <echo message="Packaging plugin sources"/>
+        <zip zipfile="${dist.dir}/${sources.zip}">
+            <fileset dir=".">
+                <include name="**/*.*"/>
+                <exclude name="**/.*"/>
+                <exclude name="${dist.dir}"/>
+                <exclude name="${build.dir}"/>
+                <exclude name="classes/"/>
+                <exclude name="*.iws"/>
+                <exclude name="*.jar"/>
+                <exclude name="*.zip"/>
+            </fileset>
+        </zip>
+    </target>
+
+    <!-- === Creates plugin jar === -->
+    <target name="jar" depends="compile, compile.forms">
+        <echo message="Creating plugin jar"/>
+        <jar basedir="${build.dir}" destfile="${dist.dir}/${plugin.jar}"/>
+    </target>
+
+    <!-- === Compiles plugin sources === -->
+    <target name="compile" depends="init">
+        <echo message="Compiling plugin sources"/>
+
+        <javac destdir="${build.dir}" debug="true"
+               source="1.5" target="1.5" fork="yes">
+            <src path="${java.src.dir}"/>
+            <classpath refid="project.classpath"/>
+        </javac>
+
+        <!-- Copy plugin.xml -->
+        <copy file="${plugin.xml.file}" todir="${build.dir}/META-INF"/>
+
+        <!-- Copy resources (images, intention description etc -->
+        <copy todir="${build.dir}">
+            <fileset dir="${java.src.dir}">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!-- === Compile plugin forms === -->
+    <target name="compile.forms" depends="compile">
+        <echo message="Instrumenting UI forms"/>
+        <taskdef name="javac2" classname="com.intellij.ant.Javac2" classpathref="project.classpath"/>
+
+        <javac2 destdir="${build.dir}" debug="true"
+                source="1.5" target="1.5" fork="yes">
+            <src path="${java.src.dir}"/>
+            <include name="**/*.form"/>
+            <classpath refid="project.classpath"/>
+        </javac2>
+    </target>
+
+    <!-- === Deletes produced files === -->
+    <target name="clean">
+        <echo message="Cleaning target directories"/>
+        <delete dir="${dist.dir}"/>
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <!-- === Creates directories === -->
+    <target name="init">
+        <echo message="Creating target directories"/>
+        <mkdir dir="${dist.dir}"/>
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${build.dir}/META-INF"/>
+    </target>
+</project>

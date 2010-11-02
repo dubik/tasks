@@ -1,0 +1,117 @@
+<!DOCTYPE idea-plugin PUBLIC "Plugin/DTD" "http://plugins.intellij.net/plugin.dtd">
+<idea-plugin url="http://www.jetbrains.net/confluence/display/CONTEST/Tasks">
+    <name>Tasks</name>
+    <description>
+        <![CDATA[
+        <p>
+        A plugin for creating and editing list of daily tasks.
+        <br>
+        If you have any comments, please send them to:
+        <a href="mailto://ideatask@gmail.com">ideatask@gmail.com</a>,
+        or post them <a href="http://www.jetbrains.net/confluence/display/CONTEST/Tasks">here</a>
+        </p>
+        ]]>
+    </description>
+    <change-notes>
+        <![CDATA[
+        <ul>
+            <u><b>Version 1.5 changes</b></u>
+            <li>FIXED: Assertion failure when updating task properties</li>
+            <li>Added debug info generation to build.xml and to plugin binaries</li>
+        </ul>
+
+        <ul>
+            <u><b>Version 1.4 changes</b></u>
+            <li>Removed unused classes</li>
+            <li>Added build.xml to source package</li>
+            <li>Documentation added</li>
+        </ul>
+        
+        <ul>
+            <u><b>Version 1.3 changes</b></u>
+            <li>Tasks can have sub-tasks. Depth level is not limited. Completions, estimated and actual time are
+                propagated to the upper level task</li>
+            <li>Actual time is implemented, after you complete a task you can specify how long did it take.
+                It's not used anywhere though, but you may wish to track your taks estimation accuracy.</li>
+            <li>Actual time feature is disabled by default, to enable it go to IntelliJ Idea settings and open
+                Tasks configuration panel</li>
+            <li>If you delete more then 1 task you will be asked for a confirmation</li>
+            <li>Create Task from TODO intention. If you have a todo item and place a cursor on it, you will be able
+                create a task with todo text (alt+enter).</li>
+        </ul>
+
+        <ul>
+            <u><b>Version 1.2 changes</b></u>
+            <li>Scroll bars appear if content of Tasks's tree can't fit tool window</li>
+            <li>Task(s) can be highlighted, i.e. small star appears right in front of it(them)</li>
+            <li>Estimation time for a task can be set up to 150h (9000minutes)</li>
+            <li>When tasks a grouped by priority important group comes first</li>
+            <li>"Not sure" priority changed to "Low", "Important" changed to "High", added icon for low priority task</li>
+            <li>When you group by priority tree is expended by default</li>
+            <li>UI cleanup, some borders removed, spaces added</li>
+        </ul>
+        
+        <ul>
+		    <u><b>Version 1.1 changes</b></u>
+		    <li>Urls and contact information updated.</li>
+	    </ul>
+        ]]>
+    </change-notes>
+    <version>1.5</version>
+    <vendor logo="/org/dubik/tasks/ui/icons/task.png" email="ideatasks@gmail.com"
+            url="http://www.jetbrains.net/confluence/display/CONTEST/Tasks">
+        Sergiy Dubovik
+    </vendor>
+    <idea-version since-build="4267"/>
+    <application-components>
+        <component>
+            <implementation-class>org.dubik.tasks.TasksApplicationComponent</implementation-class>
+        </component>
+    </application-components>
+    <project-components>
+        <component>
+            <interface-class>org.dubik.tasks.TasksProjectComponent</interface-class>
+            <implementation-class>org.dubik.tasks.TasksProjectComponent</implementation-class>
+        </component>
+    </project-components>
+    <actions>
+        <action id="TaskGroupByPriority" class="org.dubik.tasks.ui.actions.GroupByPriorityAction"
+                text="Group by Priority"
+                description="Group by priority"/>
+
+        <action id="MarkAsNotCompletedAction" class="org.dubik.tasks.ui.actions.MarkAsNotCompleted"
+                text="Mark as Not Completed"
+                description="Mark Task as Not Completed"/>
+
+        <action id="HighlightTaskAction" class="org.dubik.tasks.ui.actions.HighlightTaskAction"
+                text="Highlight Task"
+                description="Highlight task"/>
+
+        <group id="TasksActionGroup" class="com.intellij.openapi.actionSystem.DefaultActionGroup">
+            <action id="AddNewTask" class="org.dubik.tasks.ui.actions.AddNewTaskAction" text="Add Task..."
+                    description="Add new task" icon="/org/dubik/tasks/ui/icons/add_task.png"/>
+
+            <action id="RemoveTaskAction" class="org.dubik.tasks.ui.actions.RemoveTaskAction" text="Remove Task"
+                    description="Remove selected task" icon="/org/dubik/tasks/ui/icons/remove_task.png"/>
+
+            <action id="MarkCompletedAction" class="org.dubik.tasks.ui.actions.MarkCompletedAction"
+                    text="Mark Completed"
+                    description="Mark Task as Completed" icon="/org/dubik/tasks/ui/icons/complete_task.png"/>
+
+            <action id="TaskPropertyAction" class="org.dubik.tasks.ui.actions.TaskPropertyAction" text="Properties"
+                    description="Task properties" icon="/actions/properties.png"/>
+        </group>
+
+        <group id="TasksPopupGroup">
+            <reference id="AddNewTask"/>
+            <reference id="RemoveTaskAction"/>
+            <reference id="MarkCompletedAction"/>
+            <reference id="MarkAsNotCompletedAction"/>
+            <reference id="HighlightTaskAction"/>
+            <separator/>
+            <reference id="TaskGroupByPriority"/>
+            <separator/>
+            <reference id="TaskPropertyAction"/>
+        </group>
+    </actions>
+</idea-plugin>
