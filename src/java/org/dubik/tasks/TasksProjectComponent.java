@@ -32,6 +32,7 @@ import org.dubik.tasks.model.ITaskModel;
 import org.dubik.tasks.ui.TasksUIManager;
 import org.dubik.tasks.ui.tree.TaskTreeModel;
 import org.dubik.tasks.ui.tree.TreeController;
+import org.dubik.tasks.ui.tree.TreeRefresher;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -64,33 +65,55 @@ public class TasksProjectComponent implements ProjectComponent {
     }
 
     public void initComponent() {
+        TasksApplicationComponent appComp =
+                ApplicationManager.getApplication().getComponent(TasksApplicationComponent.class);
+
+        settings = appComp.getSettings();
+
+        ITaskModel taskModel = appComp.getTaskModel();
+        taskController = new TaskController(taskModel);
+
         if (tasksContainer == null) {
             tasksContainer = new JPanel(new BorderLayout(1, 1));
             tasksContainer.setBorder(null);
-
-            TasksApplicationComponent appComp =
-                    ApplicationManager.getApplication().getComponent(TasksApplicationComponent.class);
-
-            settings = appComp.getSettings();
-
-            ITaskModel taskModel = appComp.getTaskModel();
-            taskController = new TaskController(taskModel);
 
             TaskTreeModel treeModel = TasksUIManager.createTaskTreeModel(taskModel);
 
             JTree tasksTree = TasksUIManager.createTaskTree(
                     treeModel,
-                    TasksUIManager.createTaskTreePopup("TasksPopupGroup")
+                    taskController, TasksUIManager.createTaskTreePopup("TasksPopupGroup")
             );
 
             tasksTree.addTreeSelectionListener(taskController);
             tasksContainer.add(new JScrollPane(tasksTree), BorderLayout.CENTER);
 
             treeController = new TreeController(treeModel, tasksTree);
-
-            settingsChangeListener = new TreeRefresher(treeController);
+            treeModel.setRefresher(new TreeRefresher(tasksTree, treeController));
+            settingsChangeListener = new TreeUpdater(treeController);
             settings.addPropertyChangeListener(settingsChangeListener);
         }
+
+/*
+        if (expTasksContainer == null) {
+            expTasksContainer = new JPanel(new BorderLayout(1, 1));
+            expTasksContainer.setBorder(null);
+
+            DefaultMutableTreeNode root =
+                    new DefaultMutableTreeNode(new NewTask("New Task", TaskPriority.Important, 10000));
+            root.add(new DefaultMutableTreeNode(new NewTask("One more task", TaskPriority.Important, hashCode())));
+            root.add(new DefaultMutableTreeNode(new NewTask("One more task", TaskPriority.Normal, hashCode())));
+            root.add(new DefaultMutableTreeNode(new NewTask("One more task", TaskPriority.Important, hashCode())));
+
+            DefaultTreeModel m = new DefaultTreeModel(root, false);
+            
+            JTree tasksTree = TasksUIManager.createNewTaskTree(
+                    m, TasksUIManager.createTaskTreePopup("TasksPopupGroup")
+            );
+
+            tasksTree.addTreeSelectionListener(taskController);
+            expTasksContainer.add(new JScrollPane(tasksTree), BorderLayout.CENTER);
+        }
+*/
     }
 
     public void disposeComponent() {
@@ -108,17 +131,34 @@ public class TasksProjectComponent implements ProjectComponent {
         ToolWindow tasksToolWindow =
                 toolWindowManager.registerToolWindow(TasksProjectComponent.TASKS_ID,
                         tasksContainer, ToolWindowAnchor.BOTTOM);
+
+        /*
+        ContentManager contentManager = tasksToolWindow.getContentManager();
+        Content tasksContent =
+                PeerFactory.getInstance().getContentFactory().createContent(tasksContainer, "Tasks", false);
+        contentManager.addContent(tasksContent);
+        contentManager.setSelectedContent(tasksContent);
+        */
+
         Icon icon = IconLoader.getIcon(TasksUIManager.ICON_TASK);
         tasksToolWindow.setIcon(icon);
 
-        ActionGroup actionGroup = (ActionGroup) ActionManager.getInstance().getAction("TasksActionGroup");
+        registerActions();
+    }
 
+    private void registerActions() {
+        ActionGroup actionGroup = (ActionGroup) ActionManager.getInstance().getAction("TasksActionGroup");
         ActionToolbar toolBar =
                 ActionManager.getInstance().createActionToolbar("TasksActionGroupPlace", actionGroup, false);
 
-        JComponent toolBarComponent = toolBar.getComponent();
+        ActionGroup additionalActionGroup =
+                (ActionGroup) ActionManager.getInstance().getAction("TasksAdditionalToolBarGroup");
+        ActionToolbar additionalToolbar =
+                ActionManager.getInstance().createActionToolbar("TasksActionGroupPlace", additionalActionGroup, false);
+
         JPanel toolBarPanel = new JPanel(new BorderLayout(1, 1));
-        toolBarPanel.add(toolBarComponent, BorderLayout.CENTER);
+        toolBarPanel.add(toolBar.getComponent(), BorderLayout.WEST);
+        toolBarPanel.add(additionalToolbar.getComponent(), BorderLayout.CENTER);
         toolBarPanel.setBorder(null);
         tasksContainer.add(toolBarPanel, BorderLayout.WEST);
     }
@@ -136,15 +176,15 @@ public class TasksProjectComponent implements ProjectComponent {
         return treeController;
     }
 
-    class TreeRefresher implements PropertyChangeListener {
+    class TreeUpdater implements PropertyChangeListener {
         private TreeController controller;
 
-        public TreeRefresher(TreeController controller) {
+        public TreeUpdater(TreeController controller) {
             this.controller = controller;
         }
 
         public void propertyChange(PropertyChangeEvent evt) {
-            controller.refreshTree();
+            controller.changedTree();
         }
     }
 }

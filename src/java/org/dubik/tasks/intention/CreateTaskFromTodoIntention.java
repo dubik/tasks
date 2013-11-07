@@ -65,7 +65,7 @@ public class CreateTaskFromTodoIntention implements IntentionAction {
      * @param file    current file
      * @return <code>true</code> if intention is available, otherwise <code>false</code>
      */
-    public boolean isAvailable(Project project, Editor editor, PsiFile file) {
+    public boolean isAvailable(@NotNull Project project, Editor editor, PsiFile file) {
         int offset = editor.getCaretModel().getOffset();
         final PsiElement element = file.findElementAt(offset);
 
@@ -88,7 +88,7 @@ public class CreateTaskFromTodoIntention implements IntentionAction {
      * @param file    current file
      * @throws IncorrectOperationException can be thrown if operation is incorrect :)
      */
-    public void invoke(Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
+    public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
         int offset = editor.getCaretModel().getOffset();
         final PsiElement element = file.findElementAt(offset);
         if (element instanceof PsiComment) {

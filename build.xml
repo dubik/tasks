@@ -7,7 +7,7 @@
     <property name="build.dir" value="build/"/>
     <property name="plugin.jar" value="Tasks.jar"/>
     <property name="sources.zip" value="Tasks_src.zip"/>
-    <property name="idea.sdk.dir" value="C:\IntelliJ IDEA 6.0"/>
+    <property name="idea.sdk.dir" value="C:\JetBrains\IntelliJ IDEA 6.0"/>
     <property name="java.src.dir" value="src/java"/>
     <property name="plugin.xml.file" value="META-INF/plugin.xml"/>
 

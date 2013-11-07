@@ -15,18 +15,22 @@
  */
 package org.dubik.tasks.ui.forms;
 
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.DialogWrapper;
 import org.dubik.tasks.TaskSettings;
 import org.dubik.tasks.model.ITask;
 import org.dubik.tasks.model.TaskPriority;
 import org.dubik.tasks.ui.TasksUIManager;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 
 /**
  * @author Sergiy Dubovik
  */
-public class TaskForm {
+public class TaskForm extends DialogWrapper {
     private JTextField titleTextField;
     private JComboBox priorityComboBox;
     private JSpinner minutesSpinner;
@@ -39,7 +43,15 @@ public class TaskForm {
     private static long ONE_MINUTE = 60 * 1000L;
     private ITask selectedParentTask;
 
-    public TaskForm(TaskSettings settings) {
+    private Action addAction;
+    private Action addToRootAction;
+    private boolean addToRoot = false;
+
+    public TaskForm(Project project, TaskSettings settings) {
+        super(project, false);
+
+        setTitle("New Task");
+
         SpinnerModel minutesSpinnerModel = new SpinnerNumberModel(0, 0, 9000, 15);
         minutesSpinner.setModel(minutesSpinnerModel);
 
@@ -56,9 +68,34 @@ public class TaskForm {
         actualMinutesSpinner.setModel(actualMinutesSpinnerModel);
 
         setActualsVisible(settings.isEnableActualTime());
+
+        init();
     }
 
-    public String getTitle() {
+    @Nullable
+    protected JComponent createCenterPanel() {
+        return container;
+    }
+
+    protected void createDefaultActions() {
+        super.createDefaultActions();
+        addAction = new AddAction();
+        addToRootAction = new AddToRootAction();
+    }
+
+    public boolean isAddToRoot() {
+        return addToRoot;
+    }
+
+    protected Action[] createActions() {
+        return new Action[]{addToRootAction, addAction, getCancelAction()};
+    }
+
+    public JComponent getPreferredFocusedComponent() {
+        return titleTextField;
+    }
+
+    public String getTaskTitle() {
         return titleTextField.getText();
     }
 
@@ -86,7 +123,7 @@ public class TaskForm {
         minutesSpinner.setValue((int) (time / ONE_MINUTE));
     }
 
-    public void setTitle(String title) {
+    public void setTaskTitle(String title) {
         titleTextField.setText(title);
     }
 
@@ -176,6 +213,29 @@ public class TaskForm {
             setIcon(TasksUIManager.createIcon(task));
 
             return this;
+        }
+    }
+
+    private class AddAction extends AbstractAction {
+        public AddAction() {
+            putValue(Action.NAME, "&Add");
+            putValue(DEFAULT_ACTION, Boolean.TRUE);
+        }
+
+        public void actionPerformed(ActionEvent event) {
+            addToRoot = false;
+            doOKAction();
+        }
+    }
+
+    private class AddToRootAction extends AbstractAction {
+        public AddToRootAction() {
+            putValue(Action.NAME, "Add to &Root");
+        }
+
+        public void actionPerformed(ActionEvent event) {
+            addToRoot = true;
+            doOKAction();
         }
     }
 }

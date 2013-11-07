@@ -32,8 +32,9 @@ import java.util.Vector;
  */
 public class TaskTreeModel extends AbstractTreeModel implements ITaskModelChangeListener {
     private ITaskGroup root;
-
     private ITaskModel taskModel;
+    private ITaskFilter taskFilter;
+    private TreeRefresher refresher;
 
     public TaskTreeModel(ITaskModel taskModel) {
         this.taskModel = taskModel;
@@ -44,28 +45,52 @@ public class TaskTreeModel extends AbstractTreeModel implements ITaskModelChange
         root.setTaskModel(taskModel);
     }
 
+    public void setRefresher(TreeRefresher refresher) {
+        this.refresher = refresher;
+    }
+
     public Object getRoot() {
         return root;
     }
 
     public Object getChild(Object parent, int index) {
-        if (parent instanceof ITaskGroup)
-            return ((ITaskGroup) parent).get(index);
+        if (parent instanceof ITask) {
 
-        if (parent instanceof ITask)
-            return ((ITask) parent).get(index);
+            ITask task = (ITask) parent;
 
-        return null;
+            if (taskFilter != null) {
+                int taskIndex;
+
+                for (taskIndex = 0; taskIndex < task.size(); taskIndex++) {
+                    if (taskFilter.accept(task.get(taskIndex))) {
+                        if (index == 0)
+                            return task.get(taskIndex);
+
+                        index--;
+                    }
+                }
+            } else {
+                return task.get(index);
+            }
+        }
+
+        return "Null";
     }
 
     public int getChildCount(Object parent) {
-        if (parent instanceof ITaskGroup)
-            return ((ITaskGroup) parent).size();
+        int size = 0;
+        if (parent instanceof ITask) {
+            ITask task = (ITask) parent;
+            size = task.size();
+            if (taskFilter != null) {
+                for (int i = 0; i < task.size(); i++) {
+                    if (!taskFilter.accept(task.get(i)))
+                        size--;
+                }
+            }
+        }
 
-        if (parent instanceof ITask)
-            return ((ITask) parent).size();
-
-        return 0;
+        return size;
     }
 
     public boolean isLeaf(Object node) {
@@ -84,110 +109,53 @@ public class TaskTreeModel extends AbstractTreeModel implements ITaskModelChange
         return -1;
     }
 
-    public void handleAddTaskEvent(TaskChangeEvent event) {
-        ITask task = event.getTask();
-        Object[] path = findPathToTask(root, task);
-
-        if (root.size() == 1) {
-            fireTreeStructureChanged(new TreeModelEvent(this, new Object[]{root}));
-        } else {
-            Object parent = path[path.length - 1];
-            int[] childIndices = new int[]{getIndexOfChild(parent, task)};
-            fireTreeNodesInserted(new TreeModelEvent(this, path,
-                    childIndices, new Object[]{task}));
-        }
+    public void setTaskFilter(ITaskFilter taskFilter) {
+        this.taskFilter = taskFilter;
+        updateTree();
     }
 
-    private int deletedIndex;
-    private Object[] deletedPath = null;
+    private void updateTree() {
+        if (refresher != null)
+            refresher.refresh();
+        else
+            fireTreeStructureChanged(new TreeModelEvent(this, new Object[]{root}));
+
+    }
+
+    public void handleAddTaskEvent(TaskChangeEvent event) {
+        updateTree();
+    }
 
     public void handlePreDeleteTaskEvent(TaskChangeEvent event) {
-        ITask task = event.getTask();
-        Object[] path = findPathToTask(root, task);
-
-        if (path.length == 0) {
-            deletedPath = null;
-            deletedIndex = -1;
-        } else {
-            deletedPath = path;
-
-            Object parent = path[path.length - 1];
-            deletedIndex = getIndexOfChild(parent, task);
-        }
     }
 
     public void handleDeleteTaskEvent(TaskChangeEvent event) {
-        if (deletedIndex != -1 && deletedPath != null) {
-            int[] childIndices = new int[]{deletedIndex};
-            fireTreeNodesRemoved(new TreeModelEvent(this, deletedPath,
-                    childIndices, new Object[]{event.getTask()}));
-        }
+        updateTree();
     }
 
-    private int changedIndex;
-    private Object[] changedPath = null;
-
     public void handlePreChangeTaskEvent(TaskChangeEvent event) {
-        ITask task = event.getTask();
-        Object[] path = findPathToTask(root, task);
-
-        changedPath = path;
-
-        Object parent = path[path.length - 1];
-        changedIndex = getIndexOfChild(parent, task);
-
     }
 
     public void handleChangeTaskEvent(TaskChangeEvent event) {
-        Object[] newChangedPath = findPathToTask(root, event.getTask());
-        if (isSame(changedPath, newChangedPath)) {
-            TreePath treePath = new TreePath(changedPath).pathByAddingChild(event.getTask());
-            while (treePath.getPathCount() > 1) {
-                fireTreeNodesChanged(new TreeModelEvent(this, treePath));
-                treePath = treePath.getParentPath();
-            }
-        } else {
-            int[] childIndices = new int[]{changedIndex};
-            fireTreeNodesRemoved(new TreeModelEvent(this, changedPath,
-                    childIndices, new Object[]{event.getTask()}));
-
-            Object parent = newChangedPath[newChangedPath.length - 1];
-            int newIndex = getIndexOfChild(parent, event.getTask());
-
-            int[] newChildIndeces = new int[]{newIndex};
-            fireTreeNodesInserted(new TreeModelEvent(this, newChangedPath,
-                    newChildIndeces, new Object[]{event.getTask()}));
-        }
+        updateTree();
     }
 
-    private boolean isSame(Object[] list1, Object[] list2) {
-        if (list1.length != list2.length)
-            return false;
-
-        for (int i = 0; i < list1.length; i++) {
-            if (list1[i] != list2[i])
-                return false;
-        }
-
-        return true;
-    }
-
-    public Object[] findPathToTask(Object root, ITask task) {
+    public Object[] findPathToObject(Object root, Object task) {
         List<Object> path = new Vector<Object>();
-        findPathToTask(root, task, path);
+        findPathToObject(root, task, path);
         Collections.reverse(path);
         Object[] oPath = new Object[path.size()];
         oPath = path.toArray(oPath);
         return oPath;
     }
 
-    private boolean findPathToTask(Object parent, ITask task, List<Object> path) {
+    private boolean findPathToObject(Object parent, Object task, List<Object> path) {
         if (parent == task) {
             return true;
         }
 
         for (int i = 0; i < getChildCount(parent); i++) {
-            if (findPathToTask(getChild(parent, i), task, path)) {
+            if (findPathToObject(getChild(parent, i), task, path)) {
                 path.add(parent);
                 return true;
             }
@@ -212,6 +180,6 @@ public class TaskTreeModel extends AbstractTreeModel implements ITaskModelChange
         }
 
         root = newRoot;
-        fireTreeStructureChanged(new TreeModelEvent(this, new Object[]{root}));
+        updateTree();
     }
 }

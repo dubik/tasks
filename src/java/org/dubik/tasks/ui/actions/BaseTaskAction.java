@@ -41,7 +41,7 @@ abstract public class BaseTaskAction extends AnAction {
      * @param e action event
      * @return project
      */
-    Project getProject(AnActionEvent e) {
+    protected Project getProject(AnActionEvent e) {
         return (Project) e.getDataContext().getData(DataConstants.PROJECT);
     }
 
@@ -51,7 +51,7 @@ abstract public class BaseTaskAction extends AnAction {
      * @return plugin settings
      */
     @NotNull
-    TaskSettings getSettings() {
+    protected TaskSettings getSettings() {
         TasksApplicationComponent appComp =
                 ApplicationManager.getApplication().getComponent(TasksApplicationComponent.class);
 
@@ -64,7 +64,7 @@ abstract public class BaseTaskAction extends AnAction {
      * @param e action event
      * @return task controller
      */
-    TaskController getController(AnActionEvent e) {
+    protected TaskController getController(AnActionEvent e) {
         return getController(getProject(e));
     }
 
@@ -74,7 +74,7 @@ abstract public class BaseTaskAction extends AnAction {
      * @param project project associated with an action
      * @return task controller
      */
-    TaskController getController(Project project) {
+    protected TaskController getController(Project project) {
         TaskController controller = null;
         if (project != null) {
             TasksProjectComponent tasksProject = project.getComponent(TasksProjectComponent.class);
@@ -91,7 +91,7 @@ abstract public class BaseTaskAction extends AnAction {
      * @param project project associated with an action
      * @return tree controller
      */
-    TreeController getTreeController(Project project) {
+    protected TreeController getTreeController(Project project) {
         TreeController controller = null;
         if (project != null) {
             TasksProjectComponent tasksProject = project.getComponent(TasksProjectComponent.class);
@@ -100,6 +100,11 @@ abstract public class BaseTaskAction extends AnAction {
         }
 
         return controller;
+    }
+
+    protected TreeController getTreeController(AnActionEvent e) {
+        Project project = (Project) e.getDataContext().getData(DataConstants.PROJECT);
+        return getTreeController(project);
     }
 
     public void update(AnActionEvent e) {
@@ -121,7 +126,7 @@ abstract public class BaseTaskAction extends AnAction {
      * @param selectedTasks selected tasks
      * @param presentation  presentation
      */
-    void update(TaskController controller, ITask[] selectedTasks,
-                Presentation presentation) {
+    protected void update(TaskController controller, ITask[] selectedTasks,
+                          Presentation presentation) {
     }
 }

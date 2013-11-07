@@ -186,6 +186,82 @@ public class TaskModel implements ITaskModel {
         fireChangeTaskEvent(task);
     }
 
+    public boolean canMoveUp(@NotNull ITask task) {
+        ITask parent = task.getParent();
+
+        if (parent == null)
+            return tasks.indexOf(task) > 0;
+        else
+            return parent.indexOf(task) > 0;
+    }
+
+    public boolean canMoveDown(@NotNull ITask task) {
+        ITask parent = task.getParent();
+
+        if (parent == null)
+            return tasks.size() - 1 > tasks.indexOf(task);
+        else if (parent.size() > 1)
+            return parent.size() - 1 > parent.indexOf(task);
+
+        return false;
+    }
+
+    public void moveUp(@NotNull ITask task) {
+        Task parent = (Task) task.getParent();
+
+        firePreDeleteTaskEvent(task);
+
+        if (parent == null) {
+            int index = tasks.indexOf(task);
+            if (index > 0) {
+                tasks.remove(index);
+                fireDeleteTaskEvent(task);
+                tasks.add(index - 1, task);
+            }
+        } else {
+            int index = parent.indexOf(task);
+            if (index > 0) {
+                parent.remove(task);
+                fireDeleteTaskEvent(task);
+                parent.add(index - 1, task);
+            }
+        }
+
+        fireAddTaskEvent(task);
+    }
+
+    public void moveDown(@NotNull ITask task) {
+        Task parent = (Task) task.getParent();
+
+        firePreDeleteTaskEvent(task);
+
+        if (parent == null) {
+            int index = tasks.indexOf(task);
+            if (index < tasks.size() - 1) {
+                tasks.remove(index);
+                fireDeleteTaskEvent(task);
+                tasks.add(index + 1, task);
+            }
+        } else {
+            int index = parent.indexOf(task);
+            if (index < parent.size() - 1) {
+                parent.remove(task);
+                fireDeleteTaskEvent(task);
+                parent.add(index + 1, task);
+            }
+        }
+
+        fireAddTaskEvent(task);
+    }
+
+    public void setTaskHighlightingType(ITask task, TaskHighlightingType hightlightingType) {
+        firePreChangeTaskEvent(task);
+
+        ((Task) task).setHighlightingType(hightlightingType);
+
+        fireChangeTaskEvent(task);
+    }
+
     public int size() {
         return tasks.size();
     }

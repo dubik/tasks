@@ -16,9 +16,11 @@
 package org.dubik.tasks.model.impl;
 
 import org.dubik.tasks.model.ITask;
+import org.dubik.tasks.model.TaskHighlightingType;
 import org.dubik.tasks.model.TaskPriority;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Vector;
 
 /**
@@ -26,13 +28,14 @@ import java.util.Vector;
  */
 public class Task implements ITask {
     private String title;
-    private TaskPriority priority;
+    private TaskPriority priority = TaskPriority.Normal;
     private long estimatedTime;
     private long actualTime;
     private long creationTime = System.currentTimeMillis();
     private boolean completed;
     private boolean highlighted;
-    private Vector<ITask> subTasks = new Vector<ITask>();
+    private TaskHighlightingType highlightingType = TaskHighlightingType.Red;
+    private List<ITask> subTasks = new Vector<ITask>();
     private ITask parent;
 
     public Task() {
@@ -61,11 +64,15 @@ public class Task implements ITask {
         this.title = title;
     }
 
+    @NotNull
     public TaskPriority getPriority() {
+        if (priority == null)
+            return TaskPriority.Normal;
+
         return priority;
     }
 
-    public void setPriority(TaskPriority priority) {
+    public void setPriority(@NotNull TaskPriority priority) {
         this.priority = priority;
     }
 
@@ -127,6 +134,15 @@ public class Task implements ITask {
         return highlighted;
     }
 
+    @NotNull
+    public TaskHighlightingType getHighlightingType() {
+        return highlightingType;
+    }
+
+    public void setHighlightingType(@NotNull TaskHighlightingType hightlightingType) {
+        this.highlightingType = hightlightingType;
+    }
+
     public int getCompletionRatio() {
         int totalTasks = subTasks.size();
         if (totalTasks == 0)
@@ -156,6 +172,10 @@ public class Task implements ITask {
         subTasks.add(task);
     }
 
+    public void add(int index, @NotNull ITask task) {
+        subTasks.add(index, task);
+    }
+
     public int size() {
         return subTasks.size();
     }
@@ -174,5 +194,27 @@ public class Task implements ITask {
 
     public void remove(ITask task) {
         subTasks.remove(task);
+    }
+
+    public int indexOf(ITask subTask) {
+        assert subTask != null;
+
+        return subTasks.indexOf(subTask);
+    }
+
+    public void moveUp(ITask task) {
+        int index = subTasks.indexOf(task);
+        if (index > 1) {
+            subTasks.remove(index);
+            subTasks.add(index - 1, task);
+        }
+    }
+
+    public void moveDown(ITask task) {
+        int index = subTasks.indexOf(task);
+        if (index < subTasks.size() - 1) {
+            subTasks.remove(index);
+            subTasks.add(index + 1, task);
+        }
     }
 }

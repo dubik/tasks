@@ -15,10 +15,7 @@
  */
 package org.dubik.tasks;
 
-import org.dubik.tasks.model.ITask;
-import org.dubik.tasks.model.ITaskGroup;
-import org.dubik.tasks.model.ITaskModel;
-import org.dubik.tasks.model.TaskPriority;
+import org.dubik.tasks.model.*;
 import org.dubik.tasks.model.impl.TaskGroup;
 import org.jetbrains.annotations.NotNull;
 
@@ -79,7 +76,7 @@ public class TaskController implements TreeSelectionListener {
      * @return <code>true</code> if task can be completed, otherwise <code>false</code>
      */
     public boolean canComplete(ITask task) {
-        return !(task instanceof TaskGroup) && !task.isCompleted();
+        return !(task instanceof TaskGroup) && !task.isCompleted() && task.size() == 0;
     }
 
     /**
@@ -89,7 +86,7 @@ public class TaskController implements TreeSelectionListener {
      * @return <code>true</code> if task can be uncompleted, otherwise <code>false</code>
      */
     public boolean canBeUncomplete(ITask task) {
-        return !(task instanceof TaskGroup) && task.isCompleted();
+        return !(task instanceof TaskGroup) && task.isCompleted() && task.size() == 0;
     }
 
     /**
@@ -325,6 +322,26 @@ public class TaskController implements TreeSelectionListener {
         return null;
     }
 
+    public boolean canMoveUp(ITask task) {
+        return taskModel.canMoveUp(task);
+    }
+
+    public boolean canMoveDown(ITask task) {
+        return taskModel.canMoveDown(task);
+    }
+
+    public void moveUp(ITask task) {
+        taskModel.moveUp(task);
+    }
+
+    public void moveDown(ITask task) {
+        taskModel.moveDown(task);
+    }
+
+    public void setTaskHighlightingType(ITask task, TaskHighlightingType hightlightingType) {
+        taskModel.setTaskHighlightingType(task, hightlightingType);
+    }
+
     /**
      * Returns dummy task. It's used in UI to show "root" task.
      * All methods returns 0 or null, except for title.
@@ -341,8 +358,9 @@ public class TaskController implements TreeSelectionListener {
             return "Root";
         }
 
+        @NotNull
         public TaskPriority getPriority() {
-            return null;
+            return TaskPriority.Normal;
         }
 
         public long getEstimatedTime() {
@@ -361,6 +379,11 @@ public class TaskController implements TreeSelectionListener {
             return false;
         }
 
+        @NotNull
+        public TaskHighlightingType getHighlightingType() {
+            return TaskHighlightingType.Red;
+        }
+
         public void add(@NotNull ITask task) {
 
         }
@@ -375,6 +398,17 @@ public class TaskController implements TreeSelectionListener {
 
         public ITask getParent() {
             return null;
+        }
+
+        public int indexOf(ITask subTask) {
+            return 0;
+        }
+
+        public void moveUp(ITask task) {
+
+        }
+
+        public void moveDown(ITask task) {
         }
 
         public int getCompletionRatio() {

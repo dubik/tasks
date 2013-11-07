@@ -37,7 +37,7 @@ public interface ITask {
      *
      * @return task's priority
      */
-    @Nullable
+    @NotNull
     public TaskPriority getPriority();
 
     /**
@@ -77,6 +77,14 @@ public interface ITask {
     public boolean isHighlighted();
 
     /**
+     * Returns task's highlighting type.
+     *
+     * @return task's highlighting type
+     */
+    @NotNull
+    public TaskHighlightingType getHighlightingType();
+
+    /**
      * Returns completion ratio - 0% - 100%.
      *
      * @return 0% - no completed tasks, 100% all sub tasks completed
@@ -106,4 +114,10 @@ public interface ITask {
     public ITask get(int index);
 
     public ITask getParent();
+
+    public int indexOf(ITask subTask);
+
+    void moveUp(ITask task);
+
+    void moveDown(ITask task);
 }

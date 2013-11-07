@@ -21,12 +21,29 @@ package org.dubik.tasks.model;
  * @author Sergiy Dubovik
  */
 public enum TaskPriority {
-    Important("High"), Normal("Normal"), Questionable("Low");
+    Important("High", 100), Normal("Normal", 50), Questionable("Low", 10);
 
     private String friendlyName;
+    private int priority;
 
     TaskPriority(String friendlyName) {
         this.friendlyName = friendlyName;
+    }
+
+    TaskPriority(String friendlyName, int priority) {
+        this(friendlyName);
+        this.priority = priority;
+    }
+
+    public TaskPriority max(TaskPriority taskPriority) {
+        if (priority < taskPriority.getPriority())
+            return taskPriority;
+
+        return this;
+    }
+
+    public int getPriority() {
+        return priority;
     }
 
     public String toString() {

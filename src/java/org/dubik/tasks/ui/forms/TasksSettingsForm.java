@@ -28,13 +28,19 @@ public class TasksSettingsForm {
     private JCheckBox enableActualTimeFeatureCheckBox;
     private JCheckBox showEnterActualTimeCheckBox;
     private JPanel container;
+    private JCheckBox enableTasksScopesCheckBox;
+    private JCheckBox propagatePriorityCheckBox;
+    private JCheckBox oneLevelOnlyCheckBox;
 
     public TasksSettingsForm() {
-        enableActualTimeFeatureCheckBox.addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent e) {
+        ChangeListener changeListener = new ChangeListener() {
+            public void stateChanged(ChangeEvent event) {
                 updateControls();
             }
-        });
+        };
+
+        enableActualTimeFeatureCheckBox.addChangeListener(changeListener);
+        propagatePriorityCheckBox.addChangeListener(changeListener);
 
         updateControls();
     }
@@ -46,20 +52,27 @@ public class TasksSettingsForm {
     public void setData(TaskSettings taskSettings) {
         enableActualTimeFeatureCheckBox.setSelected(taskSettings.isEnableActualTime());
         showEnterActualTimeCheckBox.setSelected(taskSettings.isAskActualWhenCompleteTask());
+        propagatePriorityCheckBox.setSelected(taskSettings.isPropagatePriority());
+        oneLevelOnlyCheckBox.setSelected(taskSettings.isPriorityPropagatedOneLevelOnly());
         updateControls();
     }
 
     public void getData(TaskSettings data) {
         data.setEnableActualTime(enableActualTimeFeatureCheckBox.isSelected());
         data.setAskActualWhenCompleteTask(showEnterActualTimeCheckBox.isSelected());
+        data.setPropagatePriority(propagatePriorityCheckBox.isSelected());
+        data.setPriorityPropagatedOneLevelOnly(oneLevelOnlyCheckBox.isSelected());
     }
 
     public boolean isModified(TaskSettings data) {
         return data.isAskActualWhenCompleteTask() != showEnterActualTimeCheckBox.isSelected()
-                || data.isEnableActualTime() != enableActualTimeFeatureCheckBox.isSelected();
+                || data.isEnableActualTime() != enableActualTimeFeatureCheckBox.isSelected()
+                || data.isPropagatePriority() != propagatePriorityCheckBox.isSelected()
+                || data.isPriorityPropagatedOneLevelOnly() != oneLevelOnlyCheckBox.isSelected();
     }
 
     private void updateControls() {
         showEnterActualTimeCheckBox.setEnabled(enableActualTimeFeatureCheckBox.isSelected());
+        oneLevelOnlyCheckBox.setEnabled(propagatePriorityCheckBox.isSelected());
     }
 }

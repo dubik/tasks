@@ -39,8 +39,8 @@ public class TaskPropertyAction extends BaseTaskAction {
                 ITask sTask = selectedTasks[0];
                 DialogBuilder dialogBuilder = new DialogBuilder(project);
                 dialogBuilder.setTitle("Task's Properties");
-                TaskForm taskForm = new TaskForm(getSettings());
-                taskForm.setTitle(sTask.getTitle());
+                TaskForm taskForm = new TaskForm(project, getSettings());
+                taskForm.setTaskTitle(sTask.getTitle());
                 taskForm.setPriority(sTask.getPriority());
                 taskForm.setEstimatedTime(sTask.getEstimatedTime());
                 taskForm.setActualTime(sTask.getActualTime());
@@ -53,13 +53,13 @@ public class TaskPropertyAction extends BaseTaskAction {
                 taskForm.setParentTasksList(controller.getDummyRootTaskInstance(), controller.findPossibleParents(sTask));
 
                 dialogBuilder.setCenterPanel(taskForm.getContainer());
-                if (dialogBuilder.show() == DialogWrapper.OK_EXIT_CODE && taskForm.getTitle().trim().length() != 0) {
+                if (dialogBuilder.show() == DialogWrapper.OK_EXIT_CODE && taskForm.getTaskTitle().trim().length() != 0) {
                     if (taskForm.getSelectedParent() == controller.getDummyRootTaskInstance()) {
-                        controller.updateTask(sTask, null, taskForm.getTitle(),
+                        controller.updateTask(sTask, null, taskForm.getTaskTitle(),
                                 taskForm.getPriority(), taskForm.getEstimatedTime());
                     } else {
                         controller.updateTask(sTask, taskForm.getSelectedParent(),
-                                taskForm.getTitle(), taskForm.getPriority(), taskForm.getEstimatedTime());
+                                taskForm.getTaskTitle(), taskForm.getPriority(), taskForm.getEstimatedTime());
                     }
 
                     controller.updateActualTime(sTask, taskForm.getActualTime());

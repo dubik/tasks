@@ -64,6 +64,16 @@ public class TaskGroup implements ITaskGroup {
         return null;
     }
 
+    public int indexOf(ITask subTask) {
+        return -1;
+    }
+
+    public void moveUp(ITask task) {
+    }
+
+    public void moveDown(ITask task) {
+    }
+
     public void setTaskFilter(ITaskFilter filter) {
         this.filter = filter;
     }
@@ -76,6 +86,7 @@ public class TaskGroup implements ITaskGroup {
         this.model = model;
     }
 
+    @NotNull
     public TaskPriority getPriority() {
         return TaskPriority.Normal;
     }
@@ -98,6 +109,11 @@ public class TaskGroup implements ITaskGroup {
 
     public boolean isHighlighted() {
         return false;
+    }
+
+    @NotNull
+    public TaskHighlightingType getHighlightingType() {
+        return TaskHighlightingType.Red;
     }
 
     public int getCompletionRatio() {

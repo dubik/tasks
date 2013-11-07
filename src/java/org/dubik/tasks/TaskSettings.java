@@ -18,6 +18,7 @@ package org.dubik.tasks;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.JDOMExternalizable;
 import com.intellij.openapi.util.WriteExternalException;
+import org.dubik.tasks.utils.ExternalizeSupport;
 import org.jdom.Element;
 
 import java.beans.PropertyChangeSupport;
@@ -28,9 +29,16 @@ import java.beans.PropertyChangeSupport;
 public class TaskSettings extends PropertyChangeSupport implements JDOMExternalizable {
     private boolean enableActualTime;
     private boolean askActualWhenCompleteTask;
+    private boolean enableTasksScope;
+    private boolean propagatePriority;
+    private boolean oneLevelOnly;
+
     private static final String TASKS_SETTINGS_OPTIONS = "options";
     private static final String TASKS_SETTINGS_ENABLE_ACTUAL_TIME = "enableActualTime";
     private static final String TASKS_SETTINGS_ASK_ACTUAL = "askActualWhenCompleteTask";
+    private static final String TASKS_SETTINGS_ENABLE_TASKS_SCOPE = "enableTasksScope";
+    private static final String TASKS_SETTINGS_PROPAGATE_PRIORITY = "propagatePriority";
+    private static final String TASKS_SETTINGS_ONE_LEVEL_ONLY = "oneLevelOnly";
 
     public TaskSettings() {
         super(TaskSettings.class);
@@ -56,12 +64,46 @@ public class TaskSettings extends PropertyChangeSupport implements JDOMExternali
         firePropertyChange(TASKS_SETTINGS_ASK_ACTUAL, oldValue, askActualWhenCompleteTask);
     }
 
+    public void setEnableTasksScope(boolean enableTasksScope) {
+        boolean oldValue = this.enableTasksScope;
+        this.enableTasksScope = enableTasksScope;
+        firePropertyChange(TASKS_SETTINGS_ENABLE_TASKS_SCOPE, oldValue, enableTasksScope);
+    }
+
+    public boolean isEnableTasksScope() {
+        return enableTasksScope;
+    }
+
+    public void setPropagatePriority(boolean propagatePriority) {
+        boolean oldValue = this.propagatePriority;
+        this.propagatePriority = propagatePriority;
+        firePropertyChange(TASKS_SETTINGS_PROPAGATE_PRIORITY, oldValue, propagatePriority);
+    }
+
+    public boolean isPropagatePriority() {
+        return propagatePriority;
+    }
+
+    public void setPriorityPropagatedOneLevelOnly(boolean oneLevelOnly) {
+        boolean oldValue = this.oneLevelOnly;
+        this.oneLevelOnly = oneLevelOnly;
+        firePropertyChange(TASKS_SETTINGS_ONE_LEVEL_ONLY, oldValue, oneLevelOnly);
+    }
+
+    public boolean isPriorityPropagatedOneLevelOnly() {
+        return oneLevelOnly;
+    }
+
     public void writeExternal(Element element) throws WriteExternalException {
         Element xTasksSettings = new Element(TASKS_SETTINGS_OPTIONS);
         element.addContent(xTasksSettings);
 
         xTasksSettings.setAttribute(TASKS_SETTINGS_ENABLE_ACTUAL_TIME, Boolean.toString(enableActualTime));
         xTasksSettings.setAttribute(TASKS_SETTINGS_ASK_ACTUAL, Boolean.toString(askActualWhenCompleteTask));
+        xTasksSettings.setAttribute(TASKS_SETTINGS_ENABLE_TASKS_SCOPE, Boolean.toString(enableTasksScope));
+
+        xTasksSettings.setAttribute(TASKS_SETTINGS_PROPAGATE_PRIORITY, Boolean.toString(propagatePriority));
+        xTasksSettings.setAttribute(TASKS_SETTINGS_ONE_LEVEL_ONLY, Boolean.toString(oneLevelOnly));
     }
 
     public void readExternal(Element element) throws InvalidDataException {
@@ -73,5 +115,12 @@ public class TaskSettings extends PropertyChangeSupport implements JDOMExternali
                 ExternalizeSupport.getSafelyBoolean(xTasksSettings, TASKS_SETTINGS_ENABLE_ACTUAL_TIME, false);
         askActualWhenCompleteTask =
                 ExternalizeSupport.getSafelyBoolean(xTasksSettings, TASKS_SETTINGS_ASK_ACTUAL, false);
+        enableTasksScope =
+                ExternalizeSupport.getSafelyBoolean(xTasksSettings, TASKS_SETTINGS_ENABLE_TASKS_SCOPE, false);
+
+        propagatePriority =
+                ExternalizeSupport.getSafelyBoolean(xTasksSettings, TASKS_SETTINGS_PROPAGATE_PRIORITY, false);
+        oneLevelOnly =
+                ExternalizeSupport.getSafelyBoolean(xTasksSettings, TASKS_SETTINGS_ONE_LEVEL_ONLY, false);
     }
 }

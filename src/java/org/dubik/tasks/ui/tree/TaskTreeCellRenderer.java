@@ -87,6 +87,9 @@ public class TaskTreeCellRenderer extends ColoredTreeCellRenderer {
             }
         }
 
+        String tooltip = makeTooltipFromTask(task);
+        setToolTipText(tooltip);
+
         setIconTextGap(3);
     }
 
@@ -194,5 +197,37 @@ public class TaskTreeCellRenderer extends ColoredTreeCellRenderer {
         }
 
         return timeStr.toString();
+    }
+
+    private String makeTooltipFromTask(ITask task) {
+        StringBuffer tooltip = new StringBuffer();
+        int subTasks = task.size();
+        int complete = completed(task);
+        int incomplete = subTasks - complete;
+        tooltip.append("<html><b>");
+        tooltip.append(task.getTitle());
+        tooltip.append("</b>");
+        if (task.size() != 0) {
+            tooltip.append("<br>");
+            tooltip.append("Total: ");
+            tooltip.append(task.size());
+            tooltip.append(" (Complete: ");
+            tooltip.append(complete);
+            tooltip.append(", Incomplete: ");
+            tooltip.append(incomplete);
+            tooltip.append(")");
+        }
+        tooltip.append("</html>");
+        return tooltip.toString();
+    }
+
+    private int completed(ITask task) {
+        int completed = 0;
+        for (int i = 0; i < task.size(); i++) {
+            if (task.get(i).isCompleted())
+                completed++;
+        }
+
+        return completed;
     }
 }

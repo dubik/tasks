@@ -178,4 +178,14 @@ public interface ITaskModel {
      * @param actualTime new real time spent on task
      */
     void updateActualTime(ITask task, long actualTime);
+
+    boolean canMoveUp(@NotNull ITask task);
+
+    boolean canMoveDown(@NotNull ITask task);
+
+    void moveUp(@NotNull ITask task);
+
+    void moveDown(@NotNull ITask task);
+
+    void setTaskHighlightingType(ITask task, TaskHighlightingType hightlightingType);
 }

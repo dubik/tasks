@@ -35,7 +35,7 @@ public class GroupByPriorityAction extends BaseTaskAction {
 
     public void update(AnActionEvent e) {
         super.update(e);
-        TreeController treeController = getTreeController(getProject(e));
+        TreeController treeController = getTreeController(e);
         if (treeController != null) {
             if (treeController.isGroupByPriority()) {
                 Icon check = TasksUIManager.getIcon(TasksUIManager.ICON_CHECK);

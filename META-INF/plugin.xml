@@ -7,13 +7,34 @@
         A plugin for creating and editing list of daily tasks.
         <br>
         If you have any comments, please send them to:
-        <a href="mailto://ideatask@gmail.com">ideatask@gmail.com</a>,
+        <a href="mailto://ideatasks@gmail.com">ideatasks@gmail.com</a>,
         or post them <a href="http://www.jetbrains.net/confluence/display/CONTEST/Tasks">here</a>
         </p>
         ]]>
     </description>
     <change-notes>
         <![CDATA[
+        <ul>
+            <u><b>Version 1.7 changes</b></u>
+            <li>Tooltip shows overview of hovered task if it has sub-tasks.</li>
+            <li>Shortcuts added for task manipulation. Settings->Keymap->Plugins->Tasks or open
+                popup menu.</li>
+            <li>Priority can now be propagated to upper tasks, you have to switch that feature on
+                in Settings->Tasks->Propagate priority to upper task.</li>
+            <li>Tasks can be exported to a file or a clipboard.</li>
+            <li>Tasks stored in separate file (tasks.xml) in IntelliJ IDEA config directory.</li>
+            <li>Task can be highlighted using red, yellow and red star.</li>
+        </ul>
+        
+        <ul>
+            <u><b>Version 1.6 changes</b></u>
+            <li>Added new action: Create new change list with the title of selected task(s).
+                If several tasks are selected then titles will be concatanated and separated by comma.</li>
+            <li>Tasks can be reordered.</li>
+            <li>Completed tasks can be hidden.</li>
+            <li>Added "Add to Root" button when create new task.</li>
+        </ul>
+        
         <ul>
             <u><b>Version 1.5 changes</b></u>
             <li>FIXED: Assertion failure when updating task properties</li>
@@ -57,7 +78,7 @@
 	    </ul>
         ]]>
     </change-notes>
-    <version>1.5</version>
+    <version>1.7</version>
     <vendor logo="/org/dubik/tasks/ui/icons/task.png" email="ideatasks@gmail.com"
             url="http://www.jetbrains.net/confluence/display/CONTEST/Tasks">
         Sergiy Dubovik
@@ -66,6 +87,9 @@
     <application-components>
         <component>
             <implementation-class>org.dubik.tasks.TasksApplicationComponent</implementation-class>
+        </component>
+        <component>
+            <implementation-class>org.dubik.tasks.NamedTaskStorage</implementation-class>
         </component>
     </application-components>
     <project-components>
@@ -81,25 +105,74 @@
 
         <action id="MarkAsNotCompletedAction" class="org.dubik.tasks.ui.actions.MarkAsNotCompleted"
                 text="Mark as Not Completed"
-                description="Mark Task as Not Completed"/>
+                description="Mark Task as Not Completed">
+            <keyboard-shortcut first-keystroke="control shift p" keymap="$default"/>
+        </action>
 
         <action id="HighlightTaskAction" class="org.dubik.tasks.ui.actions.HighlightTaskAction"
                 text="Highlight Task"
-                description="Highlight task"/>
+                description="Highlight task">
+            <keyboard-shortcut first-keystroke="SPACE" keymap="$default"/>
+        </action>
+
+        <action id="MoveTaskUpAction" class="org.dubik.tasks.ui.actions.MoveTaskUpAction"
+                text="Move task up" icon="/actions/moveUp.png"
+                description="Move task up">
+            <keyboard-shortcut first-keystroke="alt UP" keymap="$default"/>
+        </action>
+
+        <action id="MoveTaskDownAction" class="org.dubik.tasks.ui.actions.MoveTaskDownAction"
+                text="Move task down" icon="/actions/moveDown.png"
+                description="Move task down">
+            <keyboard-shortcut first-keystroke="alt DOWN" keymap="$default"/>
+        </action>
+
+        <action id="ToogleCompletedTaskVisibleAction"
+                class="org.dubik.tasks.ui.actions.ToogleCompletedTaskVisibleAction"
+                text="Hide Completed Tasks" description="Hide/unhide completed tasks"/>
+
+        <action id="NewChangelistAction" class="org.dubik.tasks.ui.actions.NewChangeListAction"
+                text="Create New Change List" description="Creates new change list based on the task"
+                icon="/org/dubik/tasks/ui/icons/newchangelist.png">
+            <keyboard-shortcut first-keystroke="alt INSERT" keymap="$default"/>
+        </action>
+
+        <action id="ExportToTextFileAction" class="org.dubik.tasks.ui.actions.ExportToTextFileAction"
+                text="Export Tasks to File" description="Exports all tasks to a text file or clipboard."/>
+
+        <action id="HighlightRedTaskAction"
+                class="org.dubik.tasks.ui.actions.highlight.HighlightRedTaskAction" text="Red"
+                description="Highlight task with red star" icon="/org/dubik/tasks/ui/icons/star_red.png"/>
+
+        <action id="HighlightYellowTaskAction"
+                class="org.dubik.tasks.ui.actions.highlight.HighlightYellowTaskAction" text="Yellow"
+                description="Highlight task with red star" icon="/org/dubik/tasks/ui/icons/star_yellow.png"/>
+
+        <action id="HighlightGreenTaskAction"
+                class="org.dubik.tasks.ui.actions.highlight.HighlightGreenTaskAction" text="Green"
+                description="Highlight task with red star" icon="/org/dubik/tasks/ui/icons/star_green.png"/>
 
         <group id="TasksActionGroup" class="com.intellij.openapi.actionSystem.DefaultActionGroup">
             <action id="AddNewTask" class="org.dubik.tasks.ui.actions.AddNewTaskAction" text="Add Task..."
-                    description="Add new task" icon="/org/dubik/tasks/ui/icons/add_task.png"/>
+                    description="Add new task" icon="/org/dubik/tasks/ui/icons/add_task.png">
+                <keyboard-shortcut first-keystroke="INSERT" keymap="$default"/>
+            </action>
 
             <action id="RemoveTaskAction" class="org.dubik.tasks.ui.actions.RemoveTaskAction" text="Remove Task"
-                    description="Remove selected task" icon="/org/dubik/tasks/ui/icons/remove_task.png"/>
+                    description="Remove selected task" icon="/org/dubik/tasks/ui/icons/remove_task.png">
+                <keyboard-shortcut first-keystroke="DELETE" keymap="$default"/>
+            </action>
 
             <action id="MarkCompletedAction" class="org.dubik.tasks.ui.actions.MarkCompletedAction"
                     text="Mark Completed"
-                    description="Mark Task as Completed" icon="/org/dubik/tasks/ui/icons/complete_task.png"/>
+                    description="Mark Task as Completed" icon="/org/dubik/tasks/ui/icons/complete_task.png">
+                <keyboard-shortcut first-keystroke="control p" keymap="$default"/>
+            </action>
 
             <action id="TaskPropertyAction" class="org.dubik.tasks.ui.actions.TaskPropertyAction" text="Properties"
-                    description="Task properties" icon="/actions/properties.png"/>
+                    description="Task properties" icon="/actions/properties.png">
+                <keyboard-shortcut first-keystroke="control ENTER" keymap="$default"/>
+            </action>
         </group>
 
         <group id="TasksPopupGroup">
@@ -107,11 +180,29 @@
             <reference id="RemoveTaskAction"/>
             <reference id="MarkCompletedAction"/>
             <reference id="MarkAsNotCompletedAction"/>
+            <separator/>
             <reference id="HighlightTaskAction"/>
             <separator/>
             <reference id="TaskGroupByPriority"/>
             <separator/>
+            <reference id="ToogleCompletedTaskVisibleAction"/>
+            <reference id="ExportToTextFileAction"/>
+            <separator/>
             <reference id="TaskPropertyAction"/>
         </group>
+
+        <group id="TasksAdditionalToolBarGroup">
+            <reference id="MoveTaskUpAction"/>
+            <reference id="MoveTaskDownAction"/>
+            <reference id="NewChangelistAction"/>
+        </group>
+
+        <group id="TasksHighlightingGroup" popup="true" text="Highlighting Icon">
+            <reference id="HighlightRedTaskAction"/>
+            <reference id="HighlightYellowTaskAction"/>
+            <reference id="HighlightGreenTaskAction"/>
+            <add-to-group anchor="after" group-id="TasksPopupGroup" relative-to-action="HighlightTaskAction"/>
+        </group>
+
     </actions>
 </idea-plugin>

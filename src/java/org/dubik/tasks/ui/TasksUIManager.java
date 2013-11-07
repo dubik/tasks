@@ -18,17 +18,26 @@ package org.dubik.tasks.ui;
 import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionPopupMenu;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.LayeredIcon;
-import com.intellij.util.ui.Tree;
+import com.intellij.util.ui.UIUtil;
+import org.dubik.tasks.TaskController;
+import org.dubik.tasks.TaskSettings;
+import org.dubik.tasks.TasksApplicationComponent;
 import org.dubik.tasks.model.ITask;
 import org.dubik.tasks.model.ITaskModel;
+import org.dubik.tasks.model.TaskHighlightingType;
 import org.dubik.tasks.model.TaskPriority;
 import org.dubik.tasks.ui.tree.TaskTreeCellRenderer;
 import org.dubik.tasks.ui.tree.TaskTreeModel;
 import org.dubik.tasks.ui.tree.TaskTreeMouseAdapter;
+import org.dubik.tasks.ui.tree.dnd.DNDTree;
+import org.dubik.tasks.ui.widgets.ProgressTooltipUI;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.plaf.ToolTipUI;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeModel;
 import java.util.HashMap;
@@ -46,11 +55,15 @@ public class TasksUIManager {
     private static final String ICON_IMPORTANT_PRIORITY = "/general/todoImportant.png";
     private static final String ICON_QUESTION_PRIORITY = "/org/dubik/tasks/ui/icons/lowPriority.png";
     public static final String ICON_CHECK = "/gutter/check.png";
-    private static final String ICON_STAR = "/org/dubik/tasks/ui/icons/star.png";
+    private static final String ICON_STAR_RED = "/org/dubik/tasks/ui/icons/star_red.png";
+    private static final String ICON_STAR_YELLOW = "/org/dubik/tasks/ui/icons/star_yellow.png";
+    private static final String ICON_STAR_GREEN = "/org/dubik/tasks/ui/icons/star_green.png";
 
     private static final String DEFAULT_ACTION_GROUP_PLACE = "TasksActionGroupPlace";
 
-    public static Icon getIcon(String path) {
+    private static final ToolTipUI progressTooltipUI = new ProgressTooltipUI();
+
+    public static Icon getIcon(@NotNull String path) {
         Icon icon = iconMap.get(path);
         if (icon == null) {
             icon = IconLoader.getIcon(path);
@@ -60,24 +73,39 @@ public class TasksUIManager {
         return icon;
     }
 
-    static public Icon createIcon(ITask task) {
+    @NotNull
+    public static Icon createIcon(@NotNull ITask task) {
         Icon taskIcon;
         if (task.isHighlighted()) {
             LayeredIcon layeredIcon = new LayeredIcon(2);
-            layeredIcon.setIcon(getIcon(ICON_STAR), 0, 0, 0);
-            layeredIcon.setIcon(findIcon(task.getPriority()), 1, 17, 0);
+            layeredIcon.setIcon(findIcon(task.getHighlightingType()), 0, 0, 0);
+            layeredIcon.setIcon(findIcon(task), 1, 17, 0);
             taskIcon = layeredIcon;
         } else {
-            taskIcon = findIcon(task.getPriority());
+            taskIcon = findIcon(task);
         }
 
         return taskIcon;
     }
 
-    public static Icon findIcon(TaskPriority priority) {
-        if (priority == null)
-            return null;
+    @NotNull
+    public static Icon findIcon(@NotNull ITask task) {
+        TasksApplicationComponent appCmp =
+                ApplicationManager.getApplication().getComponent(TasksApplicationComponent.class);
+        TaskSettings settings = appCmp.getSettings();
 
+        TaskPriority priority;
+
+        if (settings.isPropagatePriority()) {
+            priority = findHighestPriorityRecursively(task, settings.isPriorityPropagatedOneLevelOnly());
+        } else {
+            priority = task.getPriority();
+        }
+
+        return findIcon(priority);
+    }
+
+    public static Icon findIcon(@NotNull TaskPriority priority) {
         switch (priority) {
             case Normal:
                 return getIcon(ICON_DEFAULT_PRIORITY);
@@ -86,22 +114,58 @@ public class TasksUIManager {
             case Questionable:
                 return getIcon(ICON_QUESTION_PRIORITY);
             default:
-                return null;
+                return getIcon(ICON_DEFAULT_PRIORITY);
         }
     }
 
-    public static JTree createTaskTree(TreeModel model, JPopupMenu popupMenu) {
-        Tree tasksTree = new Tree();
+    @NotNull
+    public static Icon findIcon(@NotNull TaskHighlightingType highlightingType) {
+        switch (highlightingType) {
+            case Red:
+                return getIcon(ICON_STAR_RED);
+            case Yellow:
+                return getIcon(ICON_STAR_YELLOW);
+            case Green:
+                return getIcon(ICON_STAR_GREEN);
+            default:
+                throw new IllegalArgumentException("unknown highlighting type: " + highlightingType.toString());
+        }
+    }
+
+    private static TaskPriority findHighestPriorityRecursively(ITask task, boolean onlyFirstLevel) {
+        TaskPriority taskPriority = task.getPriority();
+
+        for (int i = 0; i < task.size(); i++) {
+            ITask subTask = task.get(i);
+
+            if (!onlyFirstLevel)
+                taskPriority = taskPriority.max(findHighestPriorityRecursively(subTask, false));
+            else
+                taskPriority = taskPriority.max(subTask.getPriority());
+        }
+
+        return taskPriority;
+    }
+
+    @NotNull
+    public static JTree createTaskTree(@NotNull TreeModel model, @NotNull TaskController taskController,
+                                       @NotNull JPopupMenu popupMenu) {
+        DNDTree tasksTree = new DNDTree();
         tasksTree.setShowsRootHandles(true);
-        tasksTree.setLineStyleAngled();
+        UIUtil.setLineStyleAngled(tasksTree);
         tasksTree.setCellRenderer(createTasksTreeCellRenderer());
         tasksTree.setRootVisible(false);
         tasksTree.setModel(model);
+        tasksTree.setTaskController(taskController);
         tasksTree.addMouseListener(new TaskTreeMouseAdapter(popupMenu));
+
+        ToolTipManager.sharedInstance().registerComponent(tasksTree);
+
         return tasksTree;
     }
 
     @SuppressWarnings({"SameParameterValue"})
+    @NotNull
     public static JPopupMenu createTaskTreePopup(String actionGroupId) {
         ActionGroup actionGroup = (ActionGroup) ActionManager.getInstance().getAction(actionGroupId);
         actionGroup.setPopup(true);
@@ -110,11 +174,33 @@ public class TasksUIManager {
         return popupMenu.getComponent();
     }
 
-    public static TaskTreeModel createTaskTreeModel(ITaskModel model) {
+    @NotNull
+    public static TaskTreeModel createTaskTreeModel(@NotNull ITaskModel model) {
         return new TaskTreeModel(model);
     }
 
+    @NotNull
+    public static TaskTreeModel createModuleTaskTreeModel(@NotNull ITaskModel model) {
+        return new TaskTreeModel(model);
+    }
+
+    @NotNull
+    public static TaskTreeModel createProjectTaskTreeModel(@NotNull ITaskModel model) {
+        return new TaskTreeModel(model);
+    }
+
+    @NotNull
+    public static TaskTreeModel createGlobalTaskTreeModel(@NotNull ITaskModel model) {
+        return new TaskTreeModel(model);
+    }
+
+    @NotNull
     private static TreeCellRenderer createTasksTreeCellRenderer() {
         return new TaskTreeCellRenderer();
+    }
+
+    @NotNull
+    public static ToolTipUI getProgressTooltipUI() {
+        return progressTooltipUI;
     }
 }
